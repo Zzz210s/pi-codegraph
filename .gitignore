@@ -1,0 +1,13 @@
+# AI 运行文件/编辑产物不入库
+AGENTS.md
+CLAUDE.md
+.claude/
+.ccto/
+.cursor/
+.aider*
+.codegraph/
+docs/specs/
+
+# Node
+node_modules/
+*.log
