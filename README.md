@@ -1,89 +1,99 @@
 # pi-codegraph
 
-[pi coding agent](https://github.com/earendil-works/pi-coding-agent) 的本地代码检索扩展:tree-sitter 提取符号与调用边 + SQLite 存图,注册 `code_find` / `code_trace` / `code_impact` / `code_map` 四个工具与 `/reindex`、`/code doctor` 命令。零模型、零网络,全部本地计算。
+**English | [简体中文](./README.zh-CN.md)**
 
-## 目录
+A local code-search extension for the [pi coding agent](https://github.com/earendil-works/pi-coding-agent): tree-sitter extracts symbols and call edges, SQLite stores the graph. Registers four tools - `code_find` / `code_trace` / `code_impact` / `code_map` - plus the `/reindex` and `/code doctor` commands. Zero models, zero network, all local computation.
 
-- [背景](#背景)
-- [安装](#安装)
-- [使用](#使用)
-- [配置](#配置)
-- [架构](#架构)
-- [开发](#开发)
+## Contents
 
-## 背景
+- [Background](#background)
+- [Install](#install)
+- [Usage](#usage)
+- [Limits](#limits)
+- [Architecture](#architecture)
+- [Development](#development)
 
-agent 在陌生仓库里定位代码,通常要靠多轮 grep + 逐个读文件,轮次多、上下文浪费大。codegraph 用一次索引把整个仓库的符号表和调用图装进 SQLite,后续:
+## Background
 
-- 知道(或猜)符号名 -> 一次 `code_find` 直达定义行
-- 查调用链 -> `code_trace`(callers/callees)替代多轮 grep
-- 评估改动影响面 -> `code_impact` 给出 blast radius
-- 陌生仓库摸结构 -> `code_map` 出 PageRank 排序的整仓地图
+Locating code in an unfamiliar repo usually means many rounds of grep plus file-by-file reading - lots of turns, lots of wasted context. codegraph indexes the whole repo's symbol table and call graph into SQLite once, then:
 
-实测(冷索引):aider 151 文件 952ms、hono 355 文件 2.2s、cobra 36 文件 0.4s。
+- Know (or guess) a symbol name -> one `code_find` jumps straight to the definition line
+- Follow call chains -> `code_trace` (callers/callees) replaces multiple grep rounds
+- Gauge a change's blast radius -> `code_impact` lists affected files, symbols, and tests
+- Map an unfamiliar repo -> `code_map` renders a PageRank-ranked overview
 
-## 安装
+Measured cold-index times: aider (151 files) 952ms, hono (355 files) 2.2s, cobra (36 files) 0.4s.
 
-依赖:Node >= 24(扩展加载与单测依赖原生 TS 类型剥离),pi 已安装。原生模块(tree-sitter 系列、better-sqlite3)需要本机编译工具链。
+## Install
+
+Requirements: Node >= 24 (extension loading and unit tests rely on native TS type stripping), pi installed. Native modules (tree-sitter family, better-sqlite3) need a local build toolchain.
+
+```bash
+pi install npm:@zzz210s/pi-codegraph
+# or from git:
+pi install git:github.com/Zzz210s/pi-codegraph
+```
+
+Manual install:
 
 ```bash
 git clone https://github.com/Zzz210s/pi-codegraph.git ~/pi-codegraph
 bash ~/pi-codegraph/setup.sh
 ```
 
-重启 pi(或在 pi 内执行 /reload)后生效。
+Restart pi (or run /reload inside pi) to activate.
 
-## 使用
+## Usage
 
-在 pi 会话里:
+Inside a pi session:
 
-- `code_find` — 按符号名(精确/前缀/子串)找定义,返回 `file:line kind name signature`,枢纽文件优先
-- `code_trace` — 查"谁调用 X"/"X 调用了什么"(direction=callers/callees)
-- `code_impact` — 改动影响面:受影响的文件、符号、测试(blast radius)
-- `code_map` — 整仓地图:文件按 PageRank 中心度排序,附关键符号签名
-- `/reindex <仓库根>` — 建索引(冷索引很快,151 文件约 1s)
-- `/code doctor` — 环境与索引体检(依赖、索引库状态)
+- `code_find` - find definitions by symbol name (exact/prefix/substring); returns `file:line kind name signature`, hub files ranked first
+- `code_trace` - who calls X / what X calls (direction=callers/callees)
+- `code_impact` - blast radius of a change: affected files, symbols, tests (target = file path or symbol name)
+- `code_map` - repo overview: files ranked by PageRank centrality with key symbol signatures
+- `/reindex <repo-root>` - build the index (cold indexing is fast, ~1s for 151 files)
+- `/code doctor` - environment and index health check (dependencies, index state)
 
-首次在某个仓库使用时先跑 `/reindex <仓库根>`。索引库存在仓库本地 `.codegraph/`(建议加入项目 .gitignore)。
+Run `/reindex <repo-root>` the first time you use it in a repo. The index lives in the repo-local `.codegraph/` directory (recommended to add to the project's .gitignore).
 
-支持语言:Python / TypeScript / TSX / Go / Java。
+Languages supported: Python / TypeScript / TSX / Go / Java.
 
-## 配置
+## Limits
 
-无需配置。已知边界:
+No configuration needed. Known boundaries:
 
-- 泛化词(如 `run`)的 `code_find` 只保证枢纽优先,不保证语义理想
-- monkeypatch / 属性引用不产生调用边
-- Go / Java 的目录级导入不解析到具体文件(callee_file 可能为 null)
-- hot-path 缓存未做(当前规模查询 <10ms,可接受)
+- `code_find` on generic names (e.g. `run`) guarantees hub-first ranking, not semantic perfection
+- monkeypatched / attribute-style calls produce no call edges
+- Go / Java directory-level imports do not resolve to files (callee_file may be null)
+- no hot-path caching (queries stay <10ms at current scale, acceptable)
 
-## 架构
+## Architecture
 
-单一职责模块,全部文件 <= 200 行,纯逻辑与副作用分离:
+Single-responsibility modules, every file <= 200 lines, pure logic separated from side effects:
 
-- `index.ts` — 扩展入口:注册工具与命令
-- `parse*.ts` — 各语言 tree-sitter 解析(符号/调用提取),`parse.ts` 统一分发
-- `indexer.ts` / `graph.ts` / `edges.ts` — 建图:解析产物 -> 符号表 + 调用边
-- `pagerank.ts` — 中心度排序(code_find / code_map 的枢纽优先依据)
-- `store.ts` / `store-io.ts` — SQLite 存取与迁移校验
-- `find.ts` / `trace.ts` / `blast.ts` / `map.ts` — 四个工具的核心查询逻辑
-- `tool-*.ts` — 工具的参数 schema 与输出格式化
-- `doctor.ts` / `command-*.ts` — /code doctor 与 /reindex 命令实现
-- `*.test.js` — 19 个测试文件(node --test,共 80+ 用例)
+- `index.ts` - extension entry: registers tools and commands
+- `parse*.ts` - per-language tree-sitter parsing (symbols/call extraction); `parse.ts` dispatches
+- `indexer.ts` / `graph.ts` / `edges.ts` - graph construction: parse output -> symbol table + call edges
+- `pagerank.ts` - centrality ranking (hub-first for code_find / code_map)
+- `store.ts` / `store-io.ts` - SQLite access, migration, and validation
+- `find.ts` / `trace.ts` / `blast.ts` / `map.ts` - core query logic for the four tools
+- `tool-*.ts` - tool parameter schemas and output formatting
+- `doctor.ts` / `command-*.ts` - /code doctor and /reindex command implementations
+- `*.test.js` - 19 test files (node --test, 80+ cases)
 
-## 开发
+## Development
 
 ```bash
 cd extensions/codegraph
-npm install        # 含 dev 依赖
-npm test           # node --test,全部用例
+npm install        # includes dev dependencies
+npm test           # node --test, all cases
 ```
 
 ```bash
-bash setup.sh --test   # 单测通过后部署到 ~/.pi/agent/extensions/codegraph/
+bash setup.sh --test   # run tests, then deploy to ~/.pi/agent/extensions/codegraph/
 ```
 
-修改后 `/reload` 即可热加载;索引过期跑 `/reindex`。索引库损坏时工具会返回"删除 .codegraph/ 后 /reindex"提示。
+After changes, /reload hot-reloads; re-run /reindex when the index is stale. If the index database is corrupted, the tools return a hint to delete .codegraph/ and /reindex.
 
 ## License
 

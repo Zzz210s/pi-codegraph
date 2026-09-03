@@ -1,6 +1,6 @@
 {
   "name": "@zzz210s/pi-codegraph",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "pi coding agent local code-search extension: tree-sitter symbol index + SQLite call graph (code_find / code_trace / code_impact / code_map)",
   "type": "module",
   "license": "MIT",
@@ -27,10 +27,13 @@
     "!extensions/codegraph/node_modules",
     "setup.sh",
     "README.md",
+    "README.zh-CN.md",
     "LICENSE"
   ],
   "pi": {
-    "extensions": ["./extensions/codegraph"]
+    "extensions": [
+      "./extensions/codegraph"
+    ]
   },
   "scripts": {
     "test": "cd extensions/codegraph && npm test"
