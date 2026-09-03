@@ -1,0 +1,45 @@
+{
+  "name": "pi-codegraph",
+  "version": "0.1.0",
+  "description": "pi coding agent local code-search extension: tree-sitter symbol index + SQLite call graph (code_find / code_trace / code_impact / code_map)",
+  "type": "module",
+  "license": "MIT",
+  "author": "Zzz210s",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Zzz210s/pi-codegraph.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Zzz210s/pi-codegraph/issues"
+  },
+  "keywords": [
+    "pi-package",
+    "pi",
+    "pi-coding-agent",
+    "extension",
+    "code-search",
+    "tree-sitter",
+    "call-graph",
+    "sqlite"
+  ],
+  "files": [
+    "extensions",
+    "setup.sh",
+    "README.md",
+    "LICENSE"
+  ],
+  "pi": {
+    "extensions": ["./extensions/codegraph"]
+  },
+  "scripts": {
+    "test": "cd extensions/codegraph && npm test"
+  },
+  "dependencies": {
+    "better-sqlite3": "^13.0.3",
+    "tree-sitter": "^0.25.1",
+    "tree-sitter-go": "^0.25.0",
+    "tree-sitter-java": "^0.23.5",
+    "tree-sitter-python": "^0.25.0",
+    "tree-sitter-typescript": "^0.23.2"
+  }
+}
