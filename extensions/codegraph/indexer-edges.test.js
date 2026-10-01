@@ -51,7 +51,7 @@ test('indexRepo: stores import and call edges, ambiguous/unknown calls get none'
       store.close();
     }
   } finally {
-    rmSync(root, { recursive: true, force: true });
+    rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
   }
 });
 
@@ -83,6 +83,6 @@ test('indexRepo: edges persist across unchanged runs and are replaced when the f
       store.close();
     }
   } finally {
-    rmSync(root, { recursive: true, force: true });
+    rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
   }
 });

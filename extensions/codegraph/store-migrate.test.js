@@ -22,7 +22,7 @@ beforeEach(() => {
 
 afterEach(() => {
   store.close();
-  rmSync(tmpDir, { recursive: true, force: true });
+  rmSync(tmpDir, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
 });
 
 

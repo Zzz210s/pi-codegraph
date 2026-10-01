@@ -49,7 +49,7 @@ beforeEach(() => {
 
 afterEach(() => {
   store.close();
-  rmSync(tmpDir, { recursive: true, force: true });
+  rmSync(tmpDir, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
 });
 
 // The MVP-1 Q1 scenario: get_ranked_tags was only called from its own file,

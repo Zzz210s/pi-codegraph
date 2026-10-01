@@ -20,7 +20,7 @@ beforeEach(() => {
 
 afterEach(() => {
   store.close();
-  rmSync(tmpDir, { recursive: true, force: true });
+  rmSync(tmpDir, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
 });
 
 test('upsertSymbols rejects an invalid kind', () => {
@@ -65,7 +65,7 @@ test('openStore on a garbage file throws the friendly rebuild hint', () => {
       /删除 .*\.codegraph\/? 后运行 \/reindex/
     );
   } finally {
-    rmSync(root, { recursive: true, force: true });
+    rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
   }
 });
 
@@ -78,6 +78,6 @@ test('codeFind and codeMap return the hint text instead of throwing on corrupt d
     assert.match(codeFind(root, 'foo'), /索引库损坏/);
     assert.match(codeMap(root), /索引库损坏/);
   } finally {
-    rmSync(root, { recursive: true, force: true });
+    rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
   }
 });

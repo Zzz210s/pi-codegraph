@@ -43,7 +43,7 @@ test('indexRepo: first run indexes .py files, skips ignored dirs, stores relativ
       store.close();
     }
   } finally {
-    rmSync(root, { recursive: true, force: true });
+    rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
   }
 });
 
@@ -76,7 +76,7 @@ test('indexRepo: unchanged files are skipped, modified file re-parsed with symbo
       store.close();
     }
   } finally {
-    rmSync(root, { recursive: true, force: true });
+    rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
   }
 });
 
@@ -106,7 +106,7 @@ test('indexRepo: changed file reduced to zero symbols still records hash and cle
       store.close();
     }
   } finally {
-    rmSync(root, { recursive: true, force: true });
+    rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
   }
 });
 
@@ -139,6 +139,6 @@ test('indexRepo: file vanishing between scan and read is skipped without throwin
       store.close();
     }
   } finally {
-    rmSync(root, { recursive: true, force: true });
+    rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
   }
 });

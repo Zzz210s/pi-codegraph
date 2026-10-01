@@ -44,7 +44,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  rmSync(tmpDir, { recursive: true, force: true });
+  rmSync(tmpDir, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
 });
 
 test('codeFind orders tiers exact > prefix > substring, dedupes, omits null signatures', () => {
@@ -93,7 +93,7 @@ test('codeFind default top_k is 20', () => {
     assert.equal(lines[19], '/big.py:20  function  calc_20');
     assert.ok(!lines.some((l) => l.includes('calc_21')));
   } finally {
-    rmSync(many, { recursive: true, force: true });
+    rmSync(many, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
   }
 });
 
@@ -123,7 +123,7 @@ test('missing index returns reindex hint and does not create the db', () => {
     assert.equal(out, `索引不存在,请先运行 /reindex ${empty}`);
     assert.ok(!existsSync(join(empty, '.codegraph', 'index.sqlite')));
   } finally {
-    rmSync(empty, { recursive: true, force: true });
+    rmSync(empty, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
   }
 });
 
@@ -176,6 +176,6 @@ test('codeFind orders rows within a tier by file PageRank, tiers still first', (
       '/a_low.py:1  function  score_low  score_low()',
     ]);
   } finally {
-    rmSync(root, { recursive: true, force: true });
+    rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
   }
 });
