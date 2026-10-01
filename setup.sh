@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # pi-codegraph 一键部署:把扩展安装到 ~/.pi/agent/extensions/codegraph/ 并装依赖。
-# 幂等:可重复运行。真源为本仓库;config-pi 的 setup.sh 也会在部署后调用本脚本。
+# 幂等:可重复运行。真源为本仓库;config-ai 的 setup.sh 也会在部署后调用本脚本。
 # 用法:bash setup.sh [--test](--test 先跑单测,失败则中止部署)
 set -euo pipefail
 
