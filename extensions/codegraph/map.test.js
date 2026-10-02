@@ -3,6 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { cleanupDir } from './tmpdir-cleanup.js';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -44,7 +45,7 @@ test('codeMap: hub file ranks first, header reports counts and budget', () => {
     // nothing truncated
     assert.ok(!out.includes('预算截断'));
   } finally {
-    rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
+    cleanupDir(root);
   }
 });
 
@@ -58,7 +59,7 @@ test('codeMap: tight budget truncates with marker, low-rank files dropped', () =
     const header = out.split('\n')[0];
     assert.match(header, /预算 200\)$/);
   } finally {
-    rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
+    cleanupDir(root);
   }
 });
 
@@ -68,7 +69,7 @@ test('codeMap: budget clamped to 200..8000', () => {
     assert.match(codeMap(root, { token_budget: 5 }).split('\n')[0], /预算 200\)$/);
     assert.match(codeMap(root, { token_budget: 999999 }).split('\n')[0], /预算 8000\)$/);
   } finally {
-    rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
+    cleanupDir(root);
   }
 });
 
@@ -79,6 +80,6 @@ test('codeMap: missing db asks for /reindex; empty index says so', () => {
     indexRepo(empty); // db created, zero symbols
     assert.match(codeMap(empty), /索引为空/);
   } finally {
-    rmSync(empty, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
+    cleanupDir(empty);
   }
 });

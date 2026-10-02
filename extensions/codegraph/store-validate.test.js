@@ -3,6 +3,7 @@
 import { test, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { cleanupDir } from './tmpdir-cleanup.js';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -20,7 +21,7 @@ beforeEach(() => {
 
 afterEach(() => {
   store.close();
-  rmSync(tmpDir, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
+  cleanupDir(tmpDir);
 });
 
 test('upsertSymbols rejects an invalid kind', () => {
@@ -65,7 +66,7 @@ test('openStore on a garbage file throws the friendly rebuild hint', () => {
       /删除 .*\.codegraph\/? 后运行 \/reindex/
     );
   } finally {
-    rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
+    cleanupDir(root);
   }
 });
 
@@ -78,6 +79,6 @@ test('codeFind and codeMap return the hint text instead of throwing on corrupt d
     assert.match(codeFind(root, 'foo'), /索引库损坏/);
     assert.match(codeMap(root), /索引库损坏/);
   } finally {
-    rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
+    cleanupDir(root);
   }
 });

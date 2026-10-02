@@ -4,6 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { cleanupDir } from './tmpdir-cleanup.js';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -51,7 +52,7 @@ test('indexRepo: stores import and call edges, ambiguous/unknown calls get none'
       store.close();
     }
   } finally {
-    rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
+    cleanupDir(root);
   }
 });
 
@@ -83,6 +84,6 @@ test('indexRepo: edges persist across unchanged runs and are replaced when the f
       store.close();
     }
   } finally {
-    rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
+    cleanupDir(root);
   }
 });

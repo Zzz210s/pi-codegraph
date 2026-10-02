@@ -4,6 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { cleanupDir } from './tmpdir-cleanup.js';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -22,7 +23,7 @@ test('doctor: missing index asks for /reindex, deps all OK', () => {
     assert.match(out, /索引: 不存在/);
     assert.match(out, /\/reindex/);
   } finally {
-    rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
+    cleanupDir(root);
   }
 });
 
@@ -39,7 +40,7 @@ test('doctor: fresh index reports counts, language distribution, freshness', () 
     assert.match(out, /语言分布: py 1, ts 1/);
     assert.match(out, /新鲜/);
   } finally {
-    rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
+    cleanupDir(root);
   }
 });
 
@@ -53,7 +54,7 @@ test('doctor: new files on disk make the index stale', () => {
     const out = doctor(root, { tryLoad: ALL_OK() });
     assert.match(out, /待更新|陈旧/);
   } finally {
-    rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
+    cleanupDir(root);
   }
 });
 
@@ -66,7 +67,7 @@ test('doctor: garbage db file is reported as corrupt', () => {
     assert.match(out, /损坏/);
     assert.match(out, /删除 .*\.codegraph 后运行 \/reindex/);
   } finally {
-    rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
+    cleanupDir(root);
   }
 });
 
@@ -82,7 +83,7 @@ test('doctor: failing dependency is reported FAIL with fix hint', () => {
     assert.match(out, /npm install/);
     assert.match(out, /依赖 tree-sitter: OK/);
   } finally {
-    rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
+    cleanupDir(root);
   }
 });
 
@@ -100,6 +101,6 @@ test('doctor: gitignore check only inside git repos', () => {
     writeFileSync(join(root, '.gitignore'), 'node_modules\n.codegraph/\n');
     assert.match(doctor(root, { tryLoad: ALL_OK() }), /\.gitignore: 已含 \.codegraph/);
   } finally {
-    rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
+    cleanupDir(root);
   }
 });

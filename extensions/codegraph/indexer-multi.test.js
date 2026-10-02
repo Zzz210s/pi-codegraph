@@ -4,6 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { cleanupDir } from './tmpdir-cleanup.js';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -63,7 +64,7 @@ test('indexRepo: mixed languages, skip dirs, TS import resolution', () => {
       store.close();
     }
   } finally {
-    rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
+    cleanupDir(root);
   }
 });
 
@@ -77,6 +78,6 @@ test('indexRepo: second run over mixed repo is a no-op', () => {
     assert.equal(r2.files, 0);
     assert.equal(r2.symbols, 2);
   } finally {
-    rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
+    cleanupDir(root);
   }
 });

@@ -4,6 +4,7 @@
 import { test, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync } from 'node:fs';
+import { cleanupDir } from './tmpdir-cleanup.js';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -22,7 +23,7 @@ beforeEach(() => {
 
 afterEach(() => {
   store.close();
-  rmSync(tmpDir, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
+  cleanupDir(tmpDir);
 });
 
 
